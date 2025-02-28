@@ -81,6 +81,12 @@ class TelegramUser(models.Model):
         choices=RoleChoices.choices,
         default=RoleChoices.USER,
     )
+    current_users = models.PositiveSmallIntegerField(
+        default=0,
+    )
+    max_users = models.PositiveSmallIntegerField(
+        default=0,
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
     )

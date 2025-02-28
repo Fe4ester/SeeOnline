@@ -17,8 +17,8 @@ class TrackerSettingAdmin(admin.ModelAdmin):
 
 @admin.register(TelegramUser)
 class TelegramUserAdmin(admin.ModelAdmin):
-    list_display = ("id", "telegram_user_id", "role", "created_at", "updated_at")
-    list_filter = ("role", "created_at")
+    list_display = ("id", "telegram_user_id", "role", "created_at", "updated_at", "max_users", "current_users")
+    list_filter = ("role", "created_at", "max_users", "current_users")
     search_fields = ("telegram_user_id",)
 
 

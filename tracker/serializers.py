@@ -51,8 +51,10 @@ class TelegramUserSerializer(serializers.ModelSerializer):
             'id',
             'telegram_user_id',
             'role',
+            'current_users',
+            'max_users',
             'created_at',
-            'updated_at',
+            'current_users',
         ]
 
 
