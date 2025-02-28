@@ -1,0 +1,27 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    container_name: django_app
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=SeeOnline.settings
+      - PYTHONUNBUFFERED=1
+      - REDIS_HOST=redis
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      celery -A SeeOnline worker --loglevel=info --logfile=celery_logs.log &
+      celery -A SeeOnline beat --loglevel=info --logfile=beat_logs.log &
+      python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app

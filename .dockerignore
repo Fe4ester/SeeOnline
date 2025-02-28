@@ -1,0 +1,13 @@
+*.log
+*.tmp
+*.swp
+__pycache__/
+.github
+.gitignore
+celerybeat-schedule
+Makefile
+poetry.lock
+pyproject.toml
+README.md
+for_test
+.venv
