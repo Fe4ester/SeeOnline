@@ -14,7 +14,7 @@ class Command(BaseCommand):
         user_id = input('user_id: ')
 
         try:
-            tracker_account = TrackerAccount.objects.get(telegram_user_id=user_id)
+            tracker_account = TrackerAccount.objects.get(telegram_id=user_id)
             tracker_setting = TrackerSetting.objects.get(tracker_account_id=tracker_account.id)
 
             api_id = tracker_account.api_id
