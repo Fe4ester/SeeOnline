@@ -8,6 +8,10 @@ from .models import (
 )
 
 
+# -----------------------------------------------------------
+# Сериализатор для TrackerAccount:
+# используется для отображения и валидации данных трекер-аккаунта.
+# -----------------------------------------------------------
 class TrackerAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrackerAccount
@@ -23,8 +27,13 @@ class TrackerAccountSerializer(serializers.ModelSerializer):
         ]
 
 
+# -----------------------------------------------------------
+# Сериализатор для TrackerSetting:
+# связанный OneToOne с TrackerAccount.
+# Включает полe tracker_account_id для удобства.
+# -----------------------------------------------------------
 class TrackerSettingSerializer(serializers.ModelSerializer):
-    # Чтобы возвращать часть данных TrackerAccount, можно подключить вложенный сериализатор, но это опционально.
+    # Ссылка на конкретный объект TrackerAccount
     tracker_account_id = serializers.PrimaryKeyRelatedField(
         source='tracker_account',
         queryset=TrackerAccount.objects.all()
@@ -34,7 +43,7 @@ class TrackerSettingSerializer(serializers.ModelSerializer):
         model = TrackerSetting
         fields = [
             'id',
-            'tracker_account_id',  # вместо 'tracker_account'
+            'tracker_account_id',
             'phone_number',
             'session_string',
             'max_users',
@@ -44,6 +53,10 @@ class TrackerSettingSerializer(serializers.ModelSerializer):
         ]
 
 
+# -----------------------------------------------------------
+# Сериализатор для TelegramUser:
+# хранит информацию о самом пользователе бота (не TrackedUser).
+# -----------------------------------------------------------
 class TelegramUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TelegramUser
@@ -54,17 +67,23 @@ class TelegramUserSerializer(serializers.ModelSerializer):
             'current_users',
             'max_users',
             'created_at',
-            'current_users',
+            'updated_at',
         ]
 
 
+# -----------------------------------------------------------
+# Сериализатор для TrackedUser:
+# поля для создания и чтения TrackedUser.
+# tracker_account_id не будет напрямую использоваться при создании,
+# т.к. по заданию выбираем его автоматически,
+# но поле оставим, чтобы его видно было при чтении/изменении.
+# -----------------------------------------------------------
 class TrackedUserSerializer(serializers.ModelSerializer):
-    # Ссылка на ID TrackerAccount
     tracker_account_id = serializers.PrimaryKeyRelatedField(
         source='tracker_account',
-        queryset=TrackerAccount.objects.all()
+        queryset=TrackerAccount.objects.all(),
+        required=False,
     )
-    # Ссылка на ID TelegramUser
     telegram_user_id = serializers.PrimaryKeyRelatedField(
         source='telegram_user',
         queryset=TelegramUser.objects.all()
@@ -83,8 +102,12 @@ class TrackedUserSerializer(serializers.ModelSerializer):
         ]
 
 
+# -----------------------------------------------------------
+# Сериализатор для OnlineStatus:
+# фиксирует, онлайн ли пользователь в данный момент,
+# и время (created_at).
+# -----------------------------------------------------------
 class OnlineStatusSerializer(serializers.ModelSerializer):
-    # Ссылка на ID TrackedUser
     tracked_user_id = serializers.PrimaryKeyRelatedField(
         source='tracked_user',
         queryset=TrackedUser.objects.all()

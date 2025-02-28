@@ -10,8 +10,11 @@ from .models import (
 )
 
 
+# -----------------------------------------------------------
+# Фильтры для TrackerAccount
+# Позволяют искать по полям is_active, is_auth и т.д.
+# -----------------------------------------------------------
 class TrackerAccountFilter(filters.FilterSet):
-    # Пример фильтрации по булевым полям
     is_active = django_filters.BooleanFilter()
     is_auth = django_filters.BooleanFilter()
 
@@ -25,12 +28,12 @@ class TrackerAccountFilter(filters.FilterSet):
         }
 
 
+# -----------------------------------------------------------
+# Фильтры для TrackerSetting
+# Пример: фильтрация по phone_number, tracker_account__telegram_user_id
+# -----------------------------------------------------------
 class TrackerSettingFilter(filters.FilterSet):
-    # Если нужно фильтровать по TrackerAccount's telegram_user_id,
-    # то можно использовать метод, берущий поле через lookup:
     tracker_account__telegram_user_id = django_filters.NumberFilter()
-
-    # Пример простой фильтрации по phone_number
     phone_number = django_filters.CharFilter(lookup_expr='iexact')
 
     class Meta:
@@ -38,12 +41,14 @@ class TrackerSettingFilter(filters.FilterSet):
         fields = {
             'id': ['exact'],
             'phone_number': ['exact', 'icontains'],
-            # Можно расширять при необходимости
         }
 
 
+# -----------------------------------------------------------
+# Фильтры для TelegramUser
+# Позволяют искать по роли, ID и т.д.
+# -----------------------------------------------------------
 class TelegramUserFilter(filters.FilterSet):
-    # Фильтрация по роли (RoleChoices)
     role = django_filters.CharFilter(lookup_expr='iexact')
 
     class Meta:
@@ -55,12 +60,12 @@ class TelegramUserFilter(filters.FilterSet):
         }
 
 
+# -----------------------------------------------------------
+# Фильтры для TrackedUser
+# Позволяют искать по username, visible_online и т.д.
+# -----------------------------------------------------------
 class TrackedUserFilter(filters.FilterSet):
-    # Для фильтрации по telegram_user_id из связанной модели TelegramUser
-    # можно через двойное подчеркивание: telegram_user__telegram_user_id
     telegram_user__telegram_user_id = django_filters.NumberFilter()
-
-    # Аналогично — фильтрация по TrackerAccount.telegram_user_id (если требуется)
     tracker_account__telegram_user_id = django_filters.NumberFilter()
 
     class Meta:
@@ -69,19 +74,18 @@ class TrackedUserFilter(filters.FilterSet):
             'id': ['exact'],
             'username': ['exact', 'icontains'],
             'visible_online': ['exact'],
-            # Если надо искать точно по TelegramUser:
-            # 'telegram_user__telegram_user_id': ['exact'],
         }
 
 
+# -----------------------------------------------------------
+# Фильтры для OnlineStatus
+# Позволяют искать по is_online, username через tracked_user,
+# а также по диапазону дат created_at.
+# -----------------------------------------------------------
 class OnlineStatusFilter(filters.FilterSet):
-    # Фильтрация по tracked_user_id
     tracked_user_id = django_filters.NumberFilter(field_name='tracked_user__id', lookup_expr='exact')
-    # Фильтрация по username через связь
     username = django_filters.CharFilter(field_name='tracked_user__username', lookup_expr='icontains')
     is_online = django_filters.BooleanFilter()
-
-    # Фильтрация по диапазону дат (created_at)
     created_at = django_filters.DateTimeFromToRangeFilter()
 
     class Meta:
@@ -89,5 +93,4 @@ class OnlineStatusFilter(filters.FilterSet):
         fields = {
             'id': ['exact'],
             'is_online': ['exact'],
-            # created_at обрабатывается RangeFilter'ом
         }

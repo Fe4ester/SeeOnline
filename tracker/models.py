@@ -1,7 +1,13 @@
 from django.db import models
 
 
-# Базовые роли, для фиксированного количества
+# -----------------------------------------------------------
+# Выбор фиксированных ролей для TelegramUser
+# - BANNED: заблокирован
+# - USER: обычный пользователь
+# - VIP: VIP-пользователь
+# - ADMIN: администратор
+# -----------------------------------------------------------
 class RoleChoices(models.TextChoices):
     BANNED = "banned", "Banned"
     USER = "user", "User"
@@ -9,6 +15,10 @@ class RoleChoices(models.TextChoices):
     ADMIN = "admin", "Administrator"
 
 
+# -----------------------------------------------------------
+# Модель TrackerAccount: хранит данные аккаунта, который
+# используется для трекинга (пар API и прочее).
+# -----------------------------------------------------------
 class TrackerAccount(models.Model):
     telegram_user_id = models.BigIntegerField(
         unique=True
@@ -37,7 +47,16 @@ class TrackerAccount(models.Model):
         verbose_name = "Трекер аккаунт"
         verbose_name_plural = "Трекер аккаунты"
 
+    def __str__(self):
+        return f"TrackerAccount #{self.id} (telegram_user_id={self.telegram_user_id})"
 
+
+# -----------------------------------------------------------
+# Модель TrackerSetting: хранит дополнительные настройки
+# для каждого трекер-аккаунта (телефон, session_string и т.д.).
+# current_users — сколько пользователей сейчас «висят» на этом трекере,
+# max_users — какой лимит пользователей можно привязать.
+# -----------------------------------------------------------
 class TrackerSetting(models.Model):
     tracker_account = models.OneToOneField(
         TrackerAccount,
@@ -71,7 +90,16 @@ class TrackerSetting(models.Model):
         verbose_name = "Настройки трекера"
         verbose_name_plural = "Настройки трекера"
 
+    def __str__(self):
+        return f"TrackerSetting #{self.id} for TrackerAccount #{self.tracker_account_id}"
 
+
+# -----------------------------------------------------------
+# Модель TelegramUser: хранит наших пользователей бота/сервиса.
+# Здесь также есть счётчик (current_users) и лимит (max_users)
+# того, сколько юзеров (TrackedUser) этот пользователь может
+# одновременно отслеживать.
+# -----------------------------------------------------------
 class TelegramUser(models.Model):
     telegram_user_id = models.BigIntegerField(
         unique=True,
@@ -98,7 +126,14 @@ class TelegramUser(models.Model):
         verbose_name = "Telegram-пользователь"
         verbose_name_plural = "Telegram-пользователи"
 
+    def __str__(self):
+        return f"TelegramUser #{self.id} (tg_id={self.telegram_user_id}, role={self.role})"
 
+
+# -----------------------------------------------------------
+# Модель TrackedUser: конкретный «отслеживаемый» пользователь в телеграме.
+# Привязан к TrackerAccount (через ForeignKey) и TelegramUser (владельцу).
+# -----------------------------------------------------------
 class TrackedUser(models.Model):
     tracker_account = models.ForeignKey(
         TrackerAccount,
@@ -128,7 +163,14 @@ class TrackedUser(models.Model):
         verbose_name = "Отслеживаемый пользователь"
         verbose_name_plural = "Отслеживаемые пользователи"
 
+    def __str__(self):
+        return f"TrackedUser #{self.id} (username={self.username})"
 
+
+# -----------------------------------------------------------
+# Модель OnlineStatus: журнал (история) статусов «онлайн» для
+# каждого TrackedUser, чтобы понимать, когда он был в сети.
+# -----------------------------------------------------------
 class OnlineStatus(models.Model):
     tracked_user = models.ForeignKey(
         TrackedUser,
@@ -143,3 +185,6 @@ class OnlineStatus(models.Model):
     class Meta:
         verbose_name = "Статус онлайн"
         verbose_name_plural = "Статусы онлайн"
+
+    def __str__(self):
+        return f"OnlineStatus #{self.id} for TrackedUser #{self.tracked_user_id}"
