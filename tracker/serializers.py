@@ -17,7 +17,7 @@ class TrackerAccountSerializer(serializers.ModelSerializer):
         model = TrackerAccount
         fields = [
             'id',
-            'telegram_user_id',
+            'telegram_id',
             'api_id',
             'api_hash',
             'is_active',
@@ -62,7 +62,7 @@ class TelegramUserSerializer(serializers.ModelSerializer):
         model = TelegramUser
         fields = [
             'id',
-            'telegram_user_id',
+            'telegram_id',
             'role',
             'current_users',
             'max_users',

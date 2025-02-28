@@ -20,7 +20,7 @@ class RoleChoices(models.TextChoices):
 # используется для трекинга (пар API и прочее).
 # -----------------------------------------------------------
 class TrackerAccount(models.Model):
-    telegram_user_id = models.BigIntegerField(
+    telegram_id = models.BigIntegerField(
         unique=True
     )
     api_id = models.PositiveIntegerField(
@@ -48,7 +48,7 @@ class TrackerAccount(models.Model):
         verbose_name_plural = "Трекер аккаунты"
 
     def __str__(self):
-        return f"TrackerAccount #{self.id} (telegram_user_id={self.telegram_user_id})"
+        return f"TrackerAccount #{self.id} (telegram_id={self.telegram_user_id})"
 
 
 # -----------------------------------------------------------
@@ -101,7 +101,7 @@ class TrackerSetting(models.Model):
 # одновременно отслеживать.
 # -----------------------------------------------------------
 class TelegramUser(models.Model):
-    telegram_user_id = models.BigIntegerField(
+    telegram_id = models.BigIntegerField(
         unique=True,
     )
     role = models.CharField(

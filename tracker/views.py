@@ -191,6 +191,18 @@ class TelegramUserViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = TelegramUserFilter
 
+    def destroy(self, request, *args, **kwargs):
+        telegram_id = request.query_params.get("telegram_id")
+
+        if telegram_id:
+            user = TelegramUser.objects.filter(telegram_id=telegram_id).first()
+            if user:
+                user.delete()
+                return Response({"message": "User deleted"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        return super().destroy(request, *args, **kwargs)
+
 
 # -----------------------------------------------------------
 # ViewSet для TrackedUser

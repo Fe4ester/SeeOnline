@@ -22,7 +22,7 @@ class TrackerAccountFilter(filters.FilterSet):
         model = TrackerAccount
         fields = {
             'id': ['exact'],
-            'telegram_user_id': ['exact'],
+            'telegram_id': ['exact'],
             'is_active': ['exact'],
             'is_auth': ['exact'],
         }
@@ -30,7 +30,7 @@ class TrackerAccountFilter(filters.FilterSet):
 
 # -----------------------------------------------------------
 # Фильтры для TrackerSetting
-# Пример: фильтрация по phone_number, tracker_account__telegram_user_id
+# Пример: фильтрация по phone_number, tracker_account__telegram_id
 # -----------------------------------------------------------
 class TrackerSettingFilter(filters.FilterSet):
     tracker_account__telegram_user_id = django_filters.NumberFilter()
@@ -55,7 +55,7 @@ class TelegramUserFilter(filters.FilterSet):
         model = TelegramUser
         fields = {
             'id': ['exact'],
-            'telegram_user_id': ['exact'],
+            'telegram_id': ['exact'],
             'role': ['exact'],
         }
 
