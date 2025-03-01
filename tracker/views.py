@@ -1,10 +1,17 @@
+# Рестовские штучки
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
+
+# Джаговые штучки
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 
+# drf_spectacular
+from drf_spectacular.utils import extend_schema, extend_schema_view
+
+# Тут и дурачку понятно
 from .models import (
     TrackerAccount,
     TrackerSetting,
@@ -45,22 +52,15 @@ class TrackerAccountViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def destroy(self, request, *args, **kwargs):
         """
-        Переопределённый метод удаления:\n
-        при удалении перераспределяем все TrackedUser на другой трекер (если есть слоты)\n
+        Переопределённый метод удаления:
+        при удалении перераспределяем все TrackedUser на другой трекер (если есть слоты).
         """
         instance = self.get_object()
-        # Логика в сервисах
         reassign_and_delete_tracker_account(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['patch', 'delete'], url_path='by-telegram-id/(?P<tg_id>[^/.]+)')
     def by_telegram_id(self, request, tg_id=None):
-        """
-        Позволяет изменить (PATCH) или удалить (DELETE) TrackerAccount по telegram_id\n
-        Пример запроса:\n
-          PATCH /tracker-accounts/by-telegram-id/123456789\n
-          DELETE /tracker-accounts/by-telegram-id/123456789\n
-        """
         try:
             account = TrackerAccount.objects.get(telegram_id=tg_id)
         except TrackerAccount.DoesNotExist:
@@ -70,7 +70,6 @@ class TrackerAccountViewSet(viewsets.ModelViewSet):
             reassign_and_delete_tracker_account(account)
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        # PATCH
         serializer = self.get_serializer(account, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -89,12 +88,6 @@ class TrackerSettingViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['patch', 'delete'], url_path='by-phone-number/(?P<phone>[^/.]+)')
     def by_phone_number(self, request, phone=None):
-        """
-        Позволяет изменить или удалить TrackerSetting по phone_number\n
-        Пример запроса:\n
-          PATCH /tracker-settings/by-phone-number/79991112233\n
-          DELETE /tracker-settings/by-phone-number/79991112233\n
-        """
         try:
             setting = TrackerSetting.objects.get(phone_number=phone)
         except TrackerSetting.DoesNotExist:
@@ -111,12 +104,6 @@ class TrackerSettingViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['patch', 'delete'], url_path='by-tracker-telegram-id/(?P<tg_id>[^/.]+)')
     def by_tracker_telegram_id(self, request, tg_id=None):
-        """
-        Позволяет изменить или удалить TrackerSetting по tracker_account.telegram_id\n
-        Пример запроса:\n
-          PATCH /tracker-settings/by-tracker-telegram-id/123456789\n
-          DELETE /tracker-settings/by-tracker-telegram-id/123456789n\
-        """
         try:
             setting = TrackerSetting.objects.get(tracker_account__telegram_id=tg_id)
         except TrackerSetting.DoesNotExist:
@@ -161,19 +148,17 @@ class TelegramUserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['patch', 'delete'], url_path='by-role/(?P<role>[^/.]+)')
     def by_role(self, request, role=None):
         """
-        Массовые операции по всем пользователям с данной role\n
-        Осторожно, можно запороть всю БД!!!!\n
+        Массовые операции по всем пользователям с данной role.
+        Осторожнее, можно снести слишком много данных.
         """
         users = TelegramUser.objects.filter(role=role)
         if not users.exists():
             raise NotFound("No TelegramUser found with this role")
 
         if request.method == 'DELETE':
-            # Допустим, удаляем все сразу (в реальном проекте подумайте дважды)
             count = users.delete()
             return Response({"deleted_count": count[0]}, status=status.HTTP_200_OK)
 
-        # PATCH
         updated_data = request.data
         for user in users:
             serializer = self.get_serializer(user, data=updated_data, partial=True)
@@ -194,7 +179,8 @@ class TrackedUserViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Переопределённый create для смены значений доступных и занятых ячеек\n
+        Переопределённый create для смены значений доступных и занятых ячеек
+        (см. create_tracked_user в сервисном слое).
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -205,7 +191,6 @@ class TrackedUserViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         delete_tracked_user(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
     @action(detail=False, methods=['patch', 'delete'], url_path='by-username/(?P<uname>[^/.]+)')
     def by_username(self, request, uname=None):
@@ -224,7 +209,6 @@ class TrackedUserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-
 # -----------------------------------------------------------
 # ViewSet для OnlineStatus
 # -----------------------------------------------------------
@@ -235,13 +219,8 @@ class OnlineStatusViewSet(viewsets.ModelViewSet):
     filterset_class = OnlineStatusFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
 
-
     @action(detail=False, methods=['delete'], url_path='by-tracked-user-id/(?P<tuid>[^/.]+)')
     def by_tracked_user_id(self, request, tuid=None):
-        """
-        Удаляем все OnlineStatus, связанные с TrackedUser.id = tuid\n
-        (или только один? — зависит от требований)\n
-        """
         statuses = OnlineStatus.objects.filter(tracked_user_id=tuid)
         if not statuses.exists():
             raise NotFound("OnlineStatus for given tracked_user_id not found")
@@ -251,9 +230,6 @@ class OnlineStatusViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['delete'], url_path='by-tracked-username/(?P<uname>[^/.]+)')
     def by_tracked_username(self, request, uname=None):
-        """
-        Удаляем все OnlineStatus по TrackedUser.username
-        """
         statuses = OnlineStatus.objects.filter(tracked_user__username=uname)
         if not statuses.exists():
             raise NotFound("OnlineStatus not found for this username")

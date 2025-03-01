@@ -97,6 +97,27 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+# Настройка документации
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Tracker API',  # Заголовок документации
+    'DESCRIPTION': 'Документация API',  # Описание
+    'VERSION': '1.0.0',  # Версия API
+    'SERVE_INCLUDE_SCHEMA': False,  # Отключает отображение схемы в UI
+    'SWAGGER_UI_SETTINGS': {
+        'operationsSorter': 'method',  # Сортировка по методу
+        'tagsSorter': 'alpha',  # Алфавитная сортировка тегов
+        'deepLinking': True,  # Включает ссылки на конкретные запросы
+        'defaultModelRendering': 'model',  # Отображение моделей в схеме
+        'defaultModelsExpandDepth': 1,  # Глубина раскрытия моделей
+        'defaultModelExpandDepth': 2,  # Глубина раскрытия объекта
+        'displayRequestDuration': True,  # Показывать время выполнения запроса
+    },
+    'COMPONENT_SPLIT_REQUEST': True,  # Разделять запросы и ответы в схемах
+    'ENUM_NAME_OVERRIDES': {},  # Позволяет переименовывать ENUM
+    'SORT_OPERATIONS': False,  # Сортировать эндпоинты по алфавиту
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],  # Доступ для всех
+}
+
 # Redis
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
