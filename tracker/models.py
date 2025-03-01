@@ -113,7 +113,7 @@ class TelegramUser(models.Model):
         default=0,
     )
     max_users = models.PositiveSmallIntegerField(
-        default=0,
+        default=5,
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
