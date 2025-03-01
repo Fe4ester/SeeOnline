@@ -1,268 +1,338 @@
 
-# SeeOnline Project
+# SeeOnline Project — Актуальная документация по API
 
-Этот проект предоставляет REST API для мониторинга Telegram-пользователей и их онлайн-статусов. Ниже описаны основные
-эндпоинты и методы работы с ними, а также команды для запуска Celery-воркеров и управления Docker-контейнерами.
+## 1. TrackerAccount
 
----
-
-## Документация по эндпоинтам
-
-Все эндпоинты доступны по соответствующим URL. Для каждого используется стандартный набор методов `GET` / `POST` /
-`PUT` / `PATCH` / `DELETE`, если не указано иное. Также включена базовая фильтрация (DjangoFilterBackend), позволяющая
-осуществлять поиск и выборку записей по ключевым полям.
-
-### 1. TrackerAccount
-
-**Базовый URL**:
-
+**Базовый URL**:  
 ```
 /tracker-accounts/
 ```
 
-- **GET** `/<tracker_account_id>/` — получение данных одного аккаунта.
-- **GET** `/` — получение списка аккаунтов (с фильтрацией по `id`, `telegram_user_id`, `is_active`, `is_auth`).
-- **POST** `/` — создание нового трекер-аккаунта.
-- **PUT/PATCH** `/<tracker_account_id>/` — обновление данных аккаунта.
-- **DELETE** `/<tracker_account_id>/` — удаление аккаунта.
+**Основные методы:**
+1. **GET /tracker-accounts/**  
+   Получение списка аккаунтов с возможной фильтрацией по:
+   - `id` (точное совпадение)
+   - `telegram_id` (точное совпадение)
+   - `is_active` (bool)
+   - `is_auth` (bool)
 
-**Основные поля модели** (`TrackerAccount`):
+2. **POST /tracker-accounts/**  
+   Создание нового трекер-аккаунта.
 
-- `id`: `int` — первичный ключ.
-- `telegram_user_id`: `bigint` — уникальный идентификатор пользователя в Telegram.
-- `api_id`: `int` — идентификатор API.
-- `api_hash`: `str` — хеш для доступа к API.
-- `is_active`: `bool` — активен ли аккаунт.
-- `is_auth`: `bool` — прошёл ли он авторизацию.
-- `created_at`, `updated_at`: даты создания/обновления.
+3. **GET /tracker-accounts/<id>/**  
+   Получение данных одного аккаунта по его `id`.
 
-**Фильтрация** (пример):
+4. **PATCH /tracker-accounts/<id>/**  
+   Частичное обновление полей аккаунта по `id`.
 
-- `GET /tracker-accounts/?is_active=true`
-- `GET /tracker-accounts/?telegram_user_id=1234567`
+5. **DELETE /tracker-accounts/<id>/**  
+   Удаление аккаунта.  
+   При удалении срабатывает логика перераспределения «отслеживаемых пользователей» на другой доступный трекер, если есть свободные слоты.
 
-### 2. TrackerSetting
+**Дополнительные эндпоинты** (обновление/удаление по `telegram_id`):
+- **PATCH /tracker-accounts/by-telegram-id/<telegram_id>**  
+  Обновление полей аккаунта, найденного по `telegram_id`.
+- **DELETE /tracker-accounts/by-telegram-id/<telegram_id>**  
+  Удаление аккаунта по `telegram_id` (также с перераспределением «отслеживаемых»).
 
-**Базовый URL**:
+### Поля модели `TrackerAccount`:
+- `id`: int, PK
+- `telegram_id`: bigint (уникальный)
+- `api_id`: int (уникальный)
+- `api_hash`: str (уникальный)
+- `is_active`: bool
+- `is_auth`: bool
+- `created_at`, `updated_at`: datetime
 
+**Пример фильтрации**:
+```
+GET /tracker-accounts/?is_active=true
+GET /tracker-accounts/?telegram_id=123456789
+```
+
+---
+
+## 2. TrackerSetting
+
+**Базовый URL**:  
 ```
 /tracker-settings/
 ```
 
-- **GET** `/<tracker_setting_id>/` — получение настроек конкретного аккаунта.
-- **GET** `/` — список настроек (фильтрация по `phone_number`, `tracker_account__telegram_user_id` и т.д.).
-- **POST** `/` — создание настроек для аккаунта.
-- **PUT/PATCH** `/<tracker_setting_id>/` — обновление настроек.
-- **DELETE** `/<tracker_setting_id>/` — удаление настроек.
+**Основные методы:**
+1. **GET /tracker-settings/**  
+   Список всех настроек с фильтрацией по:
+   - `id` (точное совпадение)
+   - `phone_number` (точное совпадение)
+   - `tracker_account__telegram_id` (точное совпадение)
+2. **POST /tracker-settings/**  
+   Создание новых настроек.
+3. **GET /tracker-settings/<id>/**  
+   Получение конкретных настроек по `id`.
+4. **PATCH /tracker-settings/<id>/**  
+   Частичное обновление настроек по `id`.
+5. **DELETE /tracker-settings/<id>/**  
+   Удаление настроек по `id`.
 
-**Основные поля модели** (`TrackerSetting`):
+**Дополнительные эндпоинты**:
+- **PATCH /tracker-settings/by-phone-number/<phone>**  
+  Обновление настроек по `phone_number`.
+- **DELETE /tracker-settings/by-phone-number/<phone>**  
+  Удаление по `phone_number`.
+- **PATCH /tracker-settings/by-tracker-telegram-id/<tg_id>**  
+  Обновление настроек по `tracker_account.telegram_id`.
+- **DELETE /tracker-settings/by-tracker-telegram-id/<tg_id>**  
+  Удаление по `tracker_account.telegram_id`.
 
-- `id`: `int` — первичный ключ.
-- `tracker_account_id`: `int` — ссылка на `TrackerAccount`.
-- `phone_number`: `str` — номер телефона, уникальный для каждой настройки.
-- `session_string`: `str` — сохранённая сессия (может быть `null`).
-- `max_users`: `int` — максимально допустимое число отслеживаемых пользователей.
-- `current_users`: `int` — текущее число отслеживаемых пользователей.
-- `created_at`, `updated_at`: даты создания/обновления.
+### Поля модели `TrackerSetting`:
+- `id`: int, PK
+- `tracker_account_id`: int (OneToOne к `TrackerAccount`)
+- `phone_number`: str (уникальный)
+- `session_string`: str / null
+- `max_users`: int
+- `current_users`: int
+- `created_at`, `updated_at`: datetime
 
-**Фильтрация** (пример):
+**Примеры фильтрации**:
+```
+GET /tracker-settings/?phone_number=+1234567
+GET /tracker-settings/?tracker_account__telegram_id=888
+```
 
-- `GET /tracker-settings/?phone_number=+123456789`
-- `GET /tracker-settings/?tracker_account__telegram_user_id=321`
+---
 
-### 3. TelegramUser
+## 3. TelegramUser
 
 **Базовый URL**:
-
 ```
 /telegram-users/
 ```
 
-- **GET** `/<telegram_user_id>/` — получение конкретного `TelegramUser`.
-- **GET** `/` — список `TelegramUser` (можно фильтровать по `id`, `telegram_user_id`, `role`).
-- **POST** `/` — создание записи о Telegram-пользователе.
-- **PUT/PATCH** `/<telegram_user_id>/` — обновление данных пользователя (например, смена роли).
-- **DELETE** `/<telegram_user_id>/` — удаление пользователя из системы.
+**Основные методы:**
+1. **GET /telegram-users/**  
+   Список всех пользователей с фильтрацией по:
+   - `id`
+   - `telegram_id`
+   - `role` (banned / user / vip / admin)
+2. **POST /telegram-users/**  
+   Создание новой записи (регистрация TelegramUser).
+3. **GET /telegram-users/<id>/**  
+   Получение данных одного пользователя по `id` (внутренний PK).
+4. **PATCH /telegram-users/<id>/**  
+   Частичное обновление данных (например, смена роли).
+5. **DELETE /telegram-users/<id>/**  
+   Удаление пользователя.
 
-**Основные поля модели** (`TelegramUser`):
+**Дополнительные эндпоинты**:
+- **PATCH /telegram-users/by-telegram-id/<tg_id>**  
+  Обновить пользователя, найденного по `telegram_id`.
+- **DELETE /telegram-users/by-telegram-id/<tg_id>**  
+  Удалить пользователя, найденного по `telegram_id`.
+- **PATCH /telegram-users/by-role/<role>**  
+  Массовое обновление данных всех пользователей с указанной ролью.
+- **DELETE /telegram-users/by-role/<role>**  
+  Массовое удаление всех пользователей с указанной ролью (будьте осторожны).
 
-- `id`: `int`
-- `telegram_user_id`: `bigint` — уникальный ID в Telegram.
-- `role`: `str` — роль пользователя (banned / user / vip / admin).
-- `created_at`, `updated_at`: даты создания/обновления.
+### Поля модели `TelegramUser`:
+- `id`: int, PK
+- `telegram_id`: bigint (уникальный)
+- `role`: str (banned / user / vip / admin)
+- `current_users`, `max_users`: int
+- `created_at`, `updated_at`: datetime
 
-**Фильтрация** (пример):
+**Примеры фильтрации**:
+```
+GET /telegram-users/?role=admin
+GET /telegram-users/?telegram_id=1234567
+```
 
-- `GET /telegram-users/?role=admin`
-- `GET /telegram-users/?telegram_user_id=1234567`
+---
 
-### 4. TrackedUser
+## 4. TrackedUser
 
 **Базовый URL**:
-
 ```
 /tracked-users/
 ```
 
-- **GET** `/<tracked_user_id>/` — получение конкретного отслеживаемого пользователя.
-- **GET** `/` — список отслеживаемых (фильтрация по `username`, `tracker_account__telegram_user_id`,
-  `telegram_user__telegram_user_id`).
-- **POST** `/` — создание новой связи «Трекер-Аккаунт → TelegramUser».
-- **PUT/PATCH** `/<tracked_user_id>/` — обновление полей (например, `username`, `visible_online`).
-- **DELETE** `/<tracked_user_id>/` — удаление связи (пользователь перестаёт отслеживаться).
+**Основные методы:**
+1. **GET /tracked-users/**  
+   Список отслеживаемых пользователей с фильтрацией по:
+   - `id`
+   - `username`
+   - `visible_online`
+   - `tracker_account__telegram_id`
+   - `telegram_user__telegram_id`
+2. **POST /tracked-users/**  
+   Создание связи «ТрекерАккаунт → TelegramUser» (указываем `tracker_account_id` и `telegram_user_id`, либо систему
+   определения аккаунта).
+3. **GET /tracked-users/<id>/**  
+   Детальная информация об одном «отслеживаемом».
+4. **PATCH /tracked-users/<id>/**  
+   Частичное обновление (смена `username`, `visible_online` и т.д.).
+5. **DELETE /tracked-users/<id>/**  
+   Удаление отслеживания. При этом вызывается сервисная логика для корректного «освобождения слотов».
 
-**Основные поля модели** (`TrackedUser`):
+**Дополнительные эндпоинты**:
+- **PATCH /tracked-users/by-username/<username>**  
+  Частичное обновление по `username` (если нужно изменить поля).
+- **DELETE /tracked-users/by-username/<username>**  
+  Удаление записи, найденной по `username`.
 
-- `id`: `int`
-- `tracker_account_id`: `int` — ссылка на `TrackerAccount`.
-- `telegram_user_id`: `int` — ссылка на `TelegramUser`.
-- `username`: `str` — юзернейм в Telegram.
-- `visible_online`: `bool` — флаг, показывать ли, что пользователь в онлайне.
-- `created_at`, `updated_at`: даты создания/обновления.
+### Поля модели `TrackedUser`:
+- `id`: int, PK
+- `tracker_account_id`: int (ForeignKey к `TrackerAccount`)
+- `telegram_user_id`: int (ForeignKey к `TelegramUser`)
+- `username`: str
+- `visible_online`: bool
+- `created_at`, `updated_at`: datetime
 
-**Фильтрация** (пример):
+**Примеры фильтрации**:
+```
+GET /tracked-users/?username=Ivan
+GET /tracked-users/?tracker_account__telegram_id=999999
+GET /tracked-users/?telegram_user__telegram_id=1234567
+```
 
-- `GET /tracked-users/?username=Ivan`
-- `GET /tracked-users/?tracker_account__telegram_user_id=999999`
-- `GET /tracked-users/?telegram_user__telegram_user_id=1234567`
+---
 
-### 5. OnlineStatus
+## 5. OnlineStatus
 
 **Базовый URL**:
-
 ```
 /online-statuses/
 ```
 
-- **GET** `/<online_status_id>/` — получение конкретной записи онлайн-статуса.
-- **GET** `/` — список всех статусов (можно фильтровать по `tracked_user_id`, `is_online`, диапазону дат `created_at` и
-  т.д.).
-- **POST** `/` — создание новой записи статуса (онлайн/оффлайн).
-- **PUT/PATCH** `/<online_status_id>/` — изменение статуса (хотя чаще всего статус пишется однократно).
-- **DELETE** `/<online_status_id>/` — удаление статуса (допустимо, если нужно очистить историю).
+**Основные методы:**
+1. **GET /online-statuses/**  
+   Список статусов с фильтрацией:
+   - `id`
+   - `tracked_user__username` (через параметр `username=...`)
+   - `is_online` (bool)
+   - диапазон дат `created_at` (через `created_at_after` и `created_at_before`).
+2. **POST /online-statuses/**  
+   Создание новой записи (фиксируем, что пользователь в сети или вышел).
+3. **GET /online-statuses/<id>/**  
+   Просмотр конкретной записи.
+4. **PATCH /online-statuses/<id>/**  
+   Частичное изменение статуса (при необходимости).
+5. **DELETE /online-statuses/<id>/**  
+   Удаление записи статуса.
 
-**Основные поля модели** (`OnlineStatus`):
+**Дополнительные эндпоинты**:
+- **DELETE /online-statuses/by-tracked-user-id/<tracked_user_id>**  
+  Массовое удаление всех статусов, связанных с указанным `TrackedUser.id`.
+- **DELETE /online-statuses/by-tracked-username/<username>**  
+  Массовое удаление статусов по `TrackedUser.username`.
 
-- `id`: `int`
-- `tracked_user_id`: `int` — ссылка на `TrackedUser`.
-- `is_online`: `bool` — онлайн (`true`) или нет (`false`).
-- `created_at`: `datetime` — время фиксации статуса.
+### Поля модели `OnlineStatus`:
+- `id`: int, PK
+- `tracked_user_id`: int (ForeignKey к `TrackedUser`)
+- `is_online`: bool
+- `created_at`: datetime (автоматически проставляется при записи)
 
-**Фильтрация** (пример):
-
-- `GET /online-statuses/?tracked_user_id=10`
-- `GET /online-statuses/?username=ivanko` (через `tracked_user__username`)
-- `GET /online-statuses/?is_online=true`
-- `GET /online-statuses/?created_at_before=2025-01-01&created_at_after=2024-12-01`
+**Примеры фильтрации**:
+```
+GET /online-statuses/?tracked_user_id=10
+GET /online-statuses/?username=ivanko
+GET /online-statuses/?created_at_before=2025-01-01&created_at_after=2024-12-01
+GET /online-statuses/?is_online=true
+```
 
 ---
 
-## Запуск воркеров
+# Запуск Celery
 
-### Команда запуска Celery-воркера
+## Запустить Celery-воркер
 
 ```
 make worker
 ```
+Запускает команду:
+```
+celery -A SeeOnline worker --loglevel=warning --logfile=celery_logs.log
+```
+В результате поднимается Celery-воркер для фоновых задач.
 
-- Выполняет команду:
-  ```
-  celery -A SeeOnline worker --loglevel=warning --logfile=celery_logs.log
-  ```
-- Поднимает основной воркер для обработки фоновых задач.
-
-### Команда запуска Beat-воркера
+## Запустить Celery Beat (планировщик)
 
 ```
 make beat
 ```
-
-- Выполняет команду:
-  ```
-  celery -A SeeOnline beat --loglevel=warning --logfile=beat_logs.log
-  ```
-- Поднимает планировщик задач (beat), отвечающий за периодический запуск заданий.
+Запускает команду:
+```
+celery -A SeeOnline beat --loglevel=warning --logfile=beat_logs.log
+```
+Поднимается `beat`, который отвечает за плановое (периодическое) выполнение задач.
 
 ---
 
-## Управление контейнерным запуском
+# Управление Docker-контейнерами
 
-### Запустить приложение
+## Запустить приложение
 
 ```
 make run
 ```
+Выполняет:
+```
+docker-compose up --build -d
+```
+Собирает и запускает все контейнеры в фоновом режиме.
 
-- Выполняет:
-  ```
-  docker-compose up --build -d
-  ```
-- Собирает и поднимает контейнеры в фоновом режиме.
-
-### Остановить приложение
+## Остановить приложение
 
 ```
 make stop
 ```
+Выполняет:
+```
+docker-compose stop
+```
+Останавливает все запущенные контейнеры (не удаляя их).
 
-- Выполняет:
-  ```
-  docker-compose stop
-  ```
-- Останавливает запущенные контейнеры (но не удаляет их).
-
-### Остановить и очистить реестр контейнеров
+## Очистить (остановить и убрать контейнеры)
 
 ```
 make clean
 ```
+Выполняет:
+```
+docker-compose down
+```
+Полностью останавливает и удаляет контейнеры (образы остаются).
 
-- Выполняет:
-  ```
-  docker-compose down
-  ```
-- Удаляет **все** запущенные контейнеры и сети проекта, но не трогает образы.
-
-### Удалить все существующие контейнеры и образы
-
-*(если нужно всё снести начисто)*
+## Удалить все контейнеры и образы (полная очистка)
 
 ```
 make full-clean
 ```
+Выполняет:
+```
+docker-compose down --volumes
+docker system prune -af
+docker volume prune -f
+```
+Удаляет все ресурсы Docker: контейнеры, образы, тома и сети — **необратимо**.
 
-- Выполняет:
-  ```
-  docker-compose down --volumes
-  docker system prune -af
-  docker volume prune -f
-  ```
-- Удаляет **все** образы, контейнеры, тома и сети (будьте осторожны).
-
-### Перезапустить приложение
+## Перезапустить приложение
 
 ```
 make restart
 ```
+Шаги:
+1. `make stop` (останавливает контейнеры)
+2. `make run` (заново запускает)
 
-- Последовательно выполняет:
-  ```
-  make stop
-  make run
-  ```
-- Останавливает контейнеры и заново их запускает.
-
-### Пересобрать приложение
+## Пересобрать приложение
 
 ```
 make rebuild
 ```
-
-- Выполняет:
-  ```
-  make clean
-  make run
-  ```
-- Удаляет контейнеры текущего проекта и заново собирает их с нуля.
+Шаги:
+1. `make clean` (останавливает и удаляет контейнеры)
+2. `make run` (собирает и запускает всё с нуля)
 
 ---
+
+**Все указанные эндпоинты и методы — пример «умолчаний» в `ModelViewSet`. Благодаря добавленным кастомным экшенам можно проводить PATCH/DELETE и по другим уникальным полям (см. соответствующие секции).**
