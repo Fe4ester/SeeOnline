@@ -3,10 +3,6 @@ from django.db import models
 
 # -----------------------------------------------------------
 # Выбор фиксированных ролей для TelegramUser
-# - BANNED: заблокирован
-# - USER: обычный пользователь
-# - VIP: VIP-пользователь
-# - ADMIN: администратор
 # -----------------------------------------------------------
 class RoleChoices(models.TextChoices):
     BANNED = "banned", "Banned"
@@ -16,46 +12,27 @@ class RoleChoices(models.TextChoices):
 
 
 # -----------------------------------------------------------
-# Модель TrackerAccount: хранит данные аккаунта, который
-# используется для трекинга (пар API и прочее).
+# Модель TrackerAccount
 # -----------------------------------------------------------
 class TrackerAccount(models.Model):
-    telegram_id = models.BigIntegerField(
-        unique=True
-    )
-    api_id = models.PositiveIntegerField(
-        unique=True,
-    )
-    api_hash = models.CharField(
-        max_length=32,
-        unique=True,
-    )
-    is_active = models.BooleanField(
-        default=False,
-    )
-    is_auth = models.BooleanField(
-        default=False,
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-    )
+    telegram_id = models.BigIntegerField(unique=True)
+    api_id = models.PositiveIntegerField(unique=True)
+    api_hash = models.CharField(max_length=32, unique=True)
+    is_active = models.BooleanField(default=False)
+    is_auth = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Трекер аккаунт"
         verbose_name_plural = "Трекер аккаунты"
 
     def __str__(self):
-        return f"TrackerAccount #{self.id} (telegram_id={self.telegram_user_id})"
+        return f"TrackerAccount #{self.id} (telegram_id={self.telegram_id})"
 
 
 # -----------------------------------------------------------
-# Модель TrackerSetting: хранит дополнительные настройки
-# для каждого трекер-аккаунта (телефон, session_string и т.д.).
-# current_users — сколько пользователей сейчас «висят» на этом трекере,
-# max_users — какой лимит пользователей можно привязать.
+# Модель TrackerSetting
 # -----------------------------------------------------------
 class TrackerSetting(models.Model):
     tracker_account = models.OneToOneField(
@@ -63,28 +40,12 @@ class TrackerSetting(models.Model):
         on_delete=models.CASCADE,
         related_name="setting",
     )
-    phone_number = models.CharField(
-        max_length=15,
-        unique=True,
-    )
-    session_string = models.TextField(
-        max_length=512,
-        unique=True,
-        null=True,
-        blank=True,
-    )
-    max_users = models.PositiveSmallIntegerField(
-        default=0,
-    )
-    current_users = models.PositiveSmallIntegerField(
-        default=0,
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-    )
+    phone_number = models.CharField(max_length=15, unique=True)
+    session_string = models.TextField(max_length=512, unique=True, null=True, blank=True)
+    max_users = models.PositiveSmallIntegerField(default=0)
+    current_users = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Настройки трекера"
@@ -95,44 +56,30 @@ class TrackerSetting(models.Model):
 
 
 # -----------------------------------------------------------
-# Модель TelegramUser: хранит наших пользователей бота/сервиса.
-# Здесь также есть счётчик (current_users) и лимит (max_users)
-# того, сколько юзеров (TrackedUser) этот пользователь может
-# одновременно отслеживать.
+# Модель TelegramUser
 # -----------------------------------------------------------
 class TelegramUser(models.Model):
-    telegram_id = models.BigIntegerField(
-        unique=True,
-    )
+    telegram_id = models.BigIntegerField(unique=True)
     role = models.CharField(
         max_length=20,
         choices=RoleChoices.choices,
         default=RoleChoices.USER,
     )
-    current_users = models.PositiveSmallIntegerField(
-        default=0,
-    )
-    max_users = models.PositiveSmallIntegerField(
-        default=5,
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-    )
+    current_users = models.PositiveSmallIntegerField(default=0)
+    max_users = models.PositiveSmallIntegerField(default=5)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Telegram-пользователь"
         verbose_name_plural = "Telegram-пользователи"
 
     def __str__(self):
-        return f"TelegramUser #{self.id} (tg_id={self.telegram_user_id}, role={self.role})"
+        return f"TelegramUser #{self.id} (tg_id={self.telegram_id}, role={self.role})"
 
 
 # -----------------------------------------------------------
-# Модель TrackedUser: конкретный «отслеживаемый» пользователь в телеграме.
-# Привязан к TrackerAccount (через ForeignKey) и TelegramUser (владельцу).
+# Модель TrackedUser
 # -----------------------------------------------------------
 class TrackedUser(models.Model):
     tracker_account = models.ForeignKey(
@@ -145,19 +92,10 @@ class TrackedUser(models.Model):
         on_delete=models.CASCADE,
         related_name="tracked_users",
     )
-    username = models.CharField(
-        max_length=32,
-        unique=False,
-    )
-    visible_online = models.BooleanField(
-        default=True,
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-    )
+    username = models.CharField(max_length=32)
+    visible_online = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Отслеживаемый пользователь"
@@ -168,8 +106,7 @@ class TrackedUser(models.Model):
 
 
 # -----------------------------------------------------------
-# Модель OnlineStatus: журнал (история) статусов «онлайн» для
-# каждого TrackedUser, чтобы понимать, когда он был в сети.
+# Модель OnlineStatus
 # -----------------------------------------------------------
 class OnlineStatus(models.Model):
     tracked_user = models.ForeignKey(
@@ -178,9 +115,7 @@ class OnlineStatus(models.Model):
         related_name="online_statuses",
     )
     is_online = models.BooleanField()
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Статус онлайн"

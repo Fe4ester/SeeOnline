@@ -9,7 +9,6 @@ from .views import (
     OnlineStatusViewSet
 )
 
-# Создаём роутер и регистрируем ViewSet'ы
 router = DefaultRouter()
 router.register(r'tracker-accounts', TrackerAccountViewSet, basename='trackeraccount')
 router.register(r'tracker-settings', TrackerSettingViewSet, basename='trackersetting')
