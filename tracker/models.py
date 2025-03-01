@@ -137,7 +137,7 @@ class TelegramUser(models.Model):
 class TrackedUser(models.Model):
     tracker_account = models.ForeignKey(
         TrackerAccount,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="tracked_users",
     )
     telegram_user = models.ForeignKey(

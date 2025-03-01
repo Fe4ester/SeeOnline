@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from tracker.models import TrackerAccount, TrackerSetting
-from tracker.services.tracker_services import default_auth
+from tracker.services.tracker_service import default_auth
 
 from django.db import transaction
 

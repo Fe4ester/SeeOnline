@@ -6,11 +6,10 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .models import (
     TrackerAccount,
-    TrackerSetting,
     TrackedUser,
     OnlineStatus
 )
-from .services.tracker_services import check_online
+from .services.tracker_service import check_online
 
 # Инициализируем логгер
 logger = logging.getLogger(__name__)
