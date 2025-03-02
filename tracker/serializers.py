@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class TrackerAccountSerializer(serializers.ModelSerializer):
+    # Debug - логи, полезны при отладки, для отслеживания всех действий
     def __init__(self, *args, **kwargs):
         logger.debug("Initializing TrackerAccountSerializer with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
@@ -36,6 +37,7 @@ class TrackerSettingSerializer(serializers.ModelSerializer):
         queryset=TrackerAccount.objects.all()
     )
 
+    # Debug - логи, полезны при отладки, для отслеживания всех действий
     def __init__(self, *args, **kwargs):
         logger.debug("Initializing TrackerSettingSerializer with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
@@ -55,6 +57,7 @@ class TrackerSettingSerializer(serializers.ModelSerializer):
 
 
 class TelegramUserSerializer(serializers.ModelSerializer):
+    # Debug - логи, полезны при отладки, для отслеживания всех действий
     def __init__(self, *args, **kwargs):
         logger.debug("Initializing TelegramUserSerializer with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
@@ -83,6 +86,7 @@ class TrackedUserSerializer(serializers.ModelSerializer):
         queryset=TelegramUser.objects.all()
     )
 
+    # Debug - логи, полезны при отладки, для отслеживания всех действий
     def __init__(self, *args, **kwargs):
         logger.debug("Initializing TrackedUserSerializer with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
@@ -106,6 +110,7 @@ class OnlineStatusSerializer(serializers.ModelSerializer):
         queryset=TrackedUser.objects.all()
     )
 
+    # Debug - логи, полезны при отладки, для отслеживания всех действий
     def __init__(self, *args, **kwargs):
         logger.debug("Initializing OnlineStatusSerializer with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)

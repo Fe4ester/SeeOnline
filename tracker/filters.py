@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 # Фильтры для TrackerAccount
 # -----------------------------------------------------------
 class TrackerAccountFilter(filters.FilterSet):
+    # Debug - логи, полезны при отладки, для отслеживания всех действий
     def __init__(self, *args, **kwargs):
         logger.debug("Initializing TrackerAccountFilter with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
@@ -39,6 +40,7 @@ class TrackerSettingFilter(filters.FilterSet):
     tracker_account__telegram_id = django_filters.NumberFilter()
 
     def __init__(self, *args, **kwargs):
+        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug("Initializing TrackerSettingFilter with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
 
@@ -55,6 +57,7 @@ class TrackerSettingFilter(filters.FilterSet):
 # -----------------------------------------------------------
 class TelegramUserFilter(filters.FilterSet):
     def __init__(self, *args, **kwargs):
+        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug("Initializing TelegramUserFilter with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
 
@@ -77,6 +80,7 @@ class TrackedUserFilter(filters.FilterSet):
     telegram_user__telegram_id = django_filters.NumberFilter()
 
     def __init__(self, *args, **kwargs):
+        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug("Initializing TrackedUserFilter with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
 
@@ -100,6 +104,7 @@ class OnlineStatusFilter(filters.FilterSet):
     created_at = django_filters.DateTimeFromToRangeFilter()
 
     def __init__(self, *args, **kwargs):
+        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug("Initializing OnlineStatusFilter with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
 

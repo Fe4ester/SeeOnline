@@ -31,7 +31,9 @@ class TrackerAccount(models.Model):
         verbose_name_plural = "Трекер аккаунты"
 
     def __str__(self):
+        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug("Called __str__ on TrackerAccount: id=%s, telegram_id=%s", self.id, self.telegram_id)
+
         return f"TrackerAccount #{self.id} (telegram_id={self.telegram_id})"
 
 
@@ -56,10 +58,12 @@ class TrackerSetting(models.Model):
         verbose_name_plural = "Настройки трекера"
 
     def __str__(self):
+        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug(
             "Called __str__ on TrackerSetting: id=%s, tracker_account_id=%s",
             self.id, self.tracker_account_id
         )
+
         return f"TrackerSetting #{self.id} for TrackerAccount #{self.tracker_account_id}"
 
 
@@ -83,10 +87,12 @@ class TelegramUser(models.Model):
         verbose_name_plural = "Telegram-пользователи"
 
     def __str__(self):
+        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug(
             "Called __str__ on TelegramUser: id=%s, telegram_id=%s, role=%s",
             self.id, self.telegram_id, self.role
         )
+
         return f"TelegramUser #{self.id} (tg_id={self.telegram_id}, role={self.role})"
 
 
@@ -114,10 +120,12 @@ class TrackedUser(models.Model):
         verbose_name_plural = "Отслеживаемые пользователи"
 
     def __str__(self):
+        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug(
             "Called __str__ on TrackedUser: id=%s, username=%s",
             self.id, self.username
         )
+
         return f"TrackedUser #{self.id} (username={self.username})"
 
 
@@ -138,8 +146,10 @@ class OnlineStatus(models.Model):
         verbose_name_plural = "Статусы онлайн"
 
     def __str__(self):
+        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug(
             "Called __str__ on OnlineStatus: id=%s, tracked_user_id=%s, is_online=%s",
             self.id, self.tracked_user_id, self.is_online
         )
+
         return f"OnlineStatus #{self.id} for TrackedUser #{self.tracked_user_id}"

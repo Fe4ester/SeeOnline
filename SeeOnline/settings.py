@@ -51,6 +51,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Мидлваря для логирования всего приложения
+    'tracker.middleware.RequestLogMiddleware'
 ]
 
 ROOT_URLCONF = 'SeeOnline.urls'
@@ -161,14 +163,14 @@ LOGGING = {
         # Наш основной логгер для кода приложения (views, serializers и тд)
         'tracker': {
             'handlers': ['console', 'app_file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
 
         # Логгер для Celery-задач
         'tracker.tasks': {
             'handlers': ['console', 'celery_file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
     }
@@ -176,6 +178,7 @@ LOGGING = {
 
 # Настройка drf
 REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'tracker.handlers.custom_exception_handler',
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
     ],
