@@ -1,27 +1,82 @@
+version: "3.8"
+
 services:
+#  db:
+#    image: postgres:latest
+#    container_name: seeonline-db
+#    restart: always
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: 256643
+#      POSTGRES_DB: seeonline
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#    networks:
+#      - monitoring
+
   redis:
     image: redis:latest
     container_name: redis
     restart: always
     ports:
       - "6379:6379"
+    networks:
+      - monitoring
 
   web:
     build: .
     container_name: django_app
+    restart: always
     depends_on:
+#      - db
       - redis
-    ports:
-      - "8000:8000"
     environment:
-      - DJANGO_SETTINGS_MODULE=SeeOnline.settings
-      - PYTHONUNBUFFERED=1
-      - REDIS_HOST=redis
+      DJANGO_SETTINGS_MODULE: SeeOnline.settings
+      PYTHONUNBUFFERED: 1
+      REDIS_HOST: redis
+#      DATABASE_URL: "postgres://postgres:256643@db:5432/seeonline"
+      DATABASE_URL: "postgres://postgres:256643@31.130.145.61:5432/seeonline"
     command: >
       sh -c "
+      sleep 5 &&
       python manage.py migrate &&
-      celery -A SeeOnline worker --loglevel=info --logfile=celery_logs.log &
-      celery -A SeeOnline beat --loglevel=info --logfile=beat_logs.log &
-      python manage.py runserver 0.0.0.0:8000"
+      python manage.py runserver 0.0.0.0:8000
+      "
     volumes:
       - .:/app
+    ports:
+      - "8000:8000"
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - monitoring
+
+volumes:
+  postgres_data:
+  grafana-storage:
+
+networks:
+  monitoring:
+    driver: bridge
