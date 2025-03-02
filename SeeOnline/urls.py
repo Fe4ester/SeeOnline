@@ -8,6 +8,8 @@ urlpatterns = [
     # Включаем маршруты из приложения tracker
     path('', include('tracker.urls')),
 
+    # Подключаем метрики - прометеус
+    path('', include('django_prometheus.urls')),  # /metrics
     # Подключаем документацию
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui')

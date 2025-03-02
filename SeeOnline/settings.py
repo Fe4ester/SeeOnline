@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-z83orrf=-eu3@$b8b2p9*n4--5d^-)86pfbqi-32tkig6xoe_r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -40,10 +40,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'drf_spectacular',
+    'django_prometheus',
     'tracker',
 ]
 
 MIDDLEWARE = [
+    # прометеус до
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -52,7 +55,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Мидлваря для логирования всего приложения
-    'tracker.middleware.RequestLogMiddleware'
+    'tracker.middleware.RequestLogMiddleware',
+    # прометеус после
+    'django_prometheus.middleware.PrometheusAfterMiddleware'
 ]
 
 ROOT_URLCONF = 'SeeOnline.urls'
@@ -81,15 +86,26 @@ WSGI_APPLICATION = 'SeeOnline.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        # Переопределяем движок, для сбора метрик с бд
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
         'NAME': 'seeonline',
         'USER': 'postgres',
         'PASSWORD': '256643',
-        # 'HOST': '31.130.145.61',
-        'HOST': 'localhost',
+        'HOST': '31.130.145.61',
+        # 'HOST': 'localhost',
+        # Это подрубить если через docker-compose
+        # 'HOST': 'db',
         'PORT': '5432',
     }
 }
+
+# На будущее для кэшэй с кастомным двишком от прометеуса для сбора метрик(перед испльзование установить django_redis)
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_prometheus.cache.backends.redis.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/1',
+#     }
+# }
 
 LOG_DIR = BASE_DIR / 'logs'
 LOG_DIR.mkdir(exist_ok=True)  # На всякий случай создадим папку, если ее нет
@@ -178,7 +194,8 @@ LOGGING = {
 
 # Настройка drf
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'tracker.handlers.custom_exception_handler',
+    # Пока отключаем тк много памяти жрет при каждом запросе
+    # 'EXCEPTION_HANDLER': 'tracker.handlers.custom_exception_handler',
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
     ],
