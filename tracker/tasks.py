@@ -11,26 +11,20 @@ from .models import (
 )
 from .services.tracker_service import check_online
 
-# Инициализируем логгер
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # __name__ = 'tracker.tasks'
 
 file_handler = logging.FileHandler("check_online.log")
 logger.warning('Test logging')
+
 logger.setLevel(logging.WARNING)
 logger.addHandler(file_handler)
 
 
 @shared_task
 def check_online_task(tracked_user_id, api_hash, api_id, session_string):
-    """
-    Задача для проверки онлайна конкретного пользователя по ID.
-    Параметры:
-      - tracked_user_id: ID пользователя (TrackedUser)
-      - api_hash, api_id, session_string: данные для API (Telegram client), подгружаются из настроек
-    """
-
     try:
-        # Выбираем только необходимые поля
+        logger.debug("[check_online_task] Starting with tracked_user_id=%s", tracked_user_id)
+
         tracked = (TrackedUser.objects
                    .only("id", "username", "visible_online")
                    .get(id=tracked_user_id))
@@ -42,79 +36,59 @@ def check_online_task(tracked_user_id, api_hash, api_id, session_string):
             api_id=api_id,
             session_string=session_string
         )
+        logger.debug("[check_online_task] Received status=%s for user=%s", current_status, username)
 
         if current_status is None:
-            # Если получаем None, значит статус недоступен — помечаем пользователя
             tracked.visible_online = False
             tracked.save(update_fields=["visible_online"])
+            logger.info("[check_online_task] Marked user %s offline (status=None)", username)
             return
 
-        # Фиксируем статус в таблице OnlineStatus, если он изменился
-        try:
-            with transaction.atomic():
-                last_status_record = (OnlineStatus.objects
-                                      .filter(tracked_user=tracked_user_id)
-                                      .order_by("-created_at")
-                                      .first())
-
-                if not last_status_record or last_status_record.is_online != current_status:
-                    OnlineStatus.objects.create(
-                        tracked_user_id=tracked_user_id,
-                        is_online=current_status
-                    )
-        except Exception:
-            logger.exception(
-                "[check_online_task] Unknown error while saving OnlineStatus",
-                exc_info=True,
-                extra={"tracked_user_id": tracked_user_id, "username": username}
+        # ...
+        last_status_record = (OnlineStatus.objects
+                              .filter(tracked_user=tracked_user_id)
+                              .order_by("-created_at")
+                              .first())
+        if not last_status_record or last_status_record.is_online != current_status:
+            OnlineStatus.objects.create(
+                tracked_user_id=tracked_user_id,
+                is_online=current_status
             )
+            logger.info("[check_online_task] Created new OnlineStatus record for %s; is_online=%s", username,
+                        current_status)
 
     except TrackedUser.DoesNotExist:
-        logger.exception(
-            "[check_online_task] TrackedUser not found",
-            exc_info=True,
-            extra={"tracked_user_id": tracked_user_id}
-        )
-
+        logger.exception("[check_online_task] TrackedUser not found", extra={"tracked_user_id": tracked_user_id})
     except Exception:
-        logger.exception(
-            "[check_online_task] Unknown error",
-            exc_info=True,
-            extra={"tracked_user_id": tracked_user_id}
-        )
+        logger.exception("[check_online_task] Unknown error", extra={"tracked_user_id": tracked_user_id})
 
 
 @shared_task
 def check_online_manager_task():
-    """
-    Менеджер, который обходится по активным TrackerAccount и создает задачи
-    на проверку статуса для привязанных к каждому аккаунту пользователей.
-    """
-    logger.info("[check_online_manager_task] Start")
-
+    logger.info("[check_online_manager_task] Start manager iteration")
     try:
-        # Подгружаем TrackerSetting через select_related у TrackerAccount есть OneToOne на TrackerSetting
         tracker_accounts = (TrackerAccount.objects
                             .filter(is_active=True, is_auth=True)
                             .select_related("setting"))
 
         with transaction.atomic():
             for tracker_account in tracker_accounts.iterator():
-                # Проверяем, есть ли связанная настройка (TrackerSetting)
-                # Если нет, попадём в блок except ниже
+                logger.debug("[check_online_manager_task] Processing account id=%s (tg_id=%s)", tracker_account.id,
+                             tracker_account.telegram_id)
+
                 try:
                     tacker_setting = tracker_account.setting
                 except ObjectDoesNotExist:
-                    logger.exception("[check_online_manager_task] TrackerSetting not found", exc_info=True)
+                    logger.warning("[check_online_manager_task] No setting for tracker_account=%s", tracker_account)
                     continue
 
-                # Подгружаем только нужные поля пользователей
                 tracked_users = (TrackedUser.objects
                                  .filter(tracker_account=tracker_account, visible_online=True)
                                  .only("id", "username"))
 
                 for tracked_user in tracked_users:
-                    # Ставим задачу на проверку
+                    logger.debug("[check_online_manager_task] Scheduling check_online for tracked_user_id=%s",
+                                 tracked_user.id)
                     check_online_task.delay(
                         tracked_user_id=tracked_user.id,
                         api_hash=tracker_account.api_hash,
@@ -122,4 +96,4 @@ def check_online_manager_task():
                         session_string=tacker_setting.session_string
                     )
     except Exception:
-        logger.exception("[check_online_manager_task] Unknown error", exc_info=True)
+        logger.exception("[check_online_manager_task] Unknown error")

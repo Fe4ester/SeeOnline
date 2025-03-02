@@ -1,3 +1,4 @@
+import logging
 from rest_framework import serializers
 from .models import (
     TrackerAccount,
@@ -7,8 +8,14 @@ from .models import (
     OnlineStatus,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class TrackerAccountSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        logger.debug("Initializing TrackerAccountSerializer with args=%s, kwargs=%s", args, kwargs)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TrackerAccount
         fields = [
@@ -29,6 +36,10 @@ class TrackerSettingSerializer(serializers.ModelSerializer):
         queryset=TrackerAccount.objects.all()
     )
 
+    def __init__(self, *args, **kwargs):
+        logger.debug("Initializing TrackerSettingSerializer with args=%s, kwargs=%s", args, kwargs)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TrackerSetting
         fields = [
@@ -44,6 +55,10 @@ class TrackerSettingSerializer(serializers.ModelSerializer):
 
 
 class TelegramUserSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        logger.debug("Initializing TelegramUserSerializer with args=%s, kwargs=%s", args, kwargs)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TelegramUser
         fields = [
@@ -68,6 +83,10 @@ class TrackedUserSerializer(serializers.ModelSerializer):
         queryset=TelegramUser.objects.all()
     )
 
+    def __init__(self, *args, **kwargs):
+        logger.debug("Initializing TrackedUserSerializer with args=%s, kwargs=%s", args, kwargs)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = TrackedUser
         fields = [
@@ -86,6 +105,10 @@ class OnlineStatusSerializer(serializers.ModelSerializer):
         source='tracked_user',
         queryset=TrackedUser.objects.all()
     )
+
+    def __init__(self, *args, **kwargs):
+        logger.debug("Initializing OnlineStatusSerializer with args=%s, kwargs=%s", args, kwargs)
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = OnlineStatus

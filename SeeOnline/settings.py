@@ -89,6 +89,91 @@ DATABASES = {
     }
 }
 
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)  # На всякий случай создадим папку, если ее нет
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    # Форматтеры для логов
+    'formatters': {
+        'verbose': {
+            'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s',
+            'datefmt': "%Y-%m-%d %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+
+    # Хендлеры
+    'handlers': {
+        # Логи в консоль (полезно в Docker и локально при разработке)
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+
+        # Основной файл логов для приложения
+        'app_file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'app.log'),
+            'formatter': 'verbose',
+        },
+
+        # Отдельный файл логов для Celery
+        'celery_file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'celery.log'),
+            'formatter': 'verbose',
+        },
+        # Ротация по максимальному размеру файлов, для наглядности, достаточно не плохо для разработки
+
+        'app_rotating_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'app.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 1024,  # Хранить 1024 архивных файла
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+
+        # Ротация по дням, пойдет на проду
+        # 'app_rotating_file': {
+        #     'class': 'logging.handlers.TimedRotatingFileHandler',
+        #     'filename': os.path.join(LOG_DIR, 'app.log'),
+        #     'when': 'midnight',  # каждый день
+        #     'backupCount': 14,  # хранить 14 файлов
+        #     'formatter': 'verbose',
+        # },
+    },
+
+    # Логгеры
+    'loggers': {
+        # Корневой логгер Django (используется многими внутренними компонентами)
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+
+        # Наш основной логгер для кода приложения (views, serializers и тд)
+        'tracker': {
+            'handlers': ['console', 'app_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+
+        # Логгер для Celery-задач
+        'tracker.tasks': {
+            'handlers': ['console', 'celery_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    }
+}
+
 # Настройка drf
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
