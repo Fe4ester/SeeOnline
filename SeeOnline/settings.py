@@ -141,11 +141,11 @@ LOGGING = {
         },
 
         # Логи Celery
-        # 'celery': {
-        #     'handlers': ['console'],
-        #     'level': 'INFO',
-        #     'propagate': False,
-        # },
+        'celery': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     }
 }
 
