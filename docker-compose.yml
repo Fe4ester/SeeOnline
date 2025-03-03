@@ -1,20 +1,20 @@
 version: "3.8"
 
 services:
-  #  db:
-  #    image: postgres:latest
-  #    container_name: seeonline-db
-  #    restart: always
-  #    environment:
-  #      POSTGRES_USER: postgres
-  #      POSTGRES_PASSWORD: 256643
-  #      POSTGRES_DB: seeonline
-  #    ports:
-  #      - "5432:5432"
-  #    volumes:
-  #      - postgres_data:/var/lib/postgresql/data
-  #    networks:
-  #      - monitoring
+  db:
+    image: postgres:latest
+    container_name: seeonline-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - monitoring
 
   redis:
     image: redis:latest
@@ -27,20 +27,66 @@ services:
 
   web:
     build: .
-    container_name: django_app
+    container_name: seeonline-service
     restart: always
     depends_on:
       - redis
+      - db
+    env_file:
+      - .env
     environment:
       DJANGO_SETTINGS_MODULE: SeeOnline.settings
       PYTHONUNBUFFERED: 1
       REDIS_HOST: redis
-      DATABASE_URL: "postgres://postgres:256643@31.130.145.61:5432/seeonline"
+      POSTGRES_HOST: db
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}"
     command: gunicorn --workers=4 --bind=0.0.0.0:8000 SeeOnline.wsgi:application
     volumes:
       - .:/app
     ports:
       - "8000:8000"
+    networks:
+      - monitoring
+
+  celery:
+    build: .
+    container_name: celery_worker
+    restart: always
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: SeeOnline.settings
+      PYTHONUNBUFFERED: 1
+      REDIS_HOST: redis
+      POSTGRES_HOST: db
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}"
+    command: celery -A SeeOnline worker
+    volumes:
+      - .:/app
+    networks:
+      - monitoring
+
+  celery_beat:
+    build: .
+    container_name: celery_beat
+    restart: always
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: SeeOnline.settings
+      PYTHONUNBUFFERED: 1
+      REDIS_HOST: redis
+      POSTGRES_HOST: db
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}"
+    command: celery -A SeeOnline beat
+    volumes:
+      - .:/app
     networks:
       - monitoring
 

@@ -127,7 +127,6 @@ LOGGING = {
         },
 
         # Логи вашего приложения tracker
-        # Если хотите видеть debug- и info-сообщения в JSON, поставьте уровень 'DEBUG' или 'INFO'
         'tracker': {
             'handlers': ['console'],
             'level': 'ERROR',
@@ -141,12 +140,12 @@ LOGGING = {
             'propagate': False,
         },
 
-        # Логи Celery (если нужно)
-        'celery': {
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
+        # Логи Celery
+        # 'celery': {
+        #     'handlers': ['console'],
+        #     'level': 'INFO',
+        #     'propagate': False,
+        # },
     }
 }
 
