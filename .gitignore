@@ -6,3 +6,4 @@ celerybeat-schedule
 celery_logs.log
 beat_logs.log
 errors.log
+.env
