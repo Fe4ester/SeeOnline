@@ -100,7 +100,7 @@ LOGGING = {
     'disable_existing_loggers': False,
 
     'formatters': {
-        'json': {  # Логирование в JSON (удобно для ELK, Loki)
+        'json': {
             'format': json.dumps({
                 "time": "%(asctime)s",
                 "level": "%(levelname)s",
@@ -119,16 +119,29 @@ LOGGING = {
     },
 
     'loggers': {
+        # Логи Django
         'django': {
             'handlers': ['console'],
             'level': 'ERROR',
             'propagate': True,
         },
+
+        # Логи вашего приложения tracker
+        # Если хотите видеть debug- и info-сообщения в JSON, поставьте уровень 'DEBUG' или 'INFO'
         'tracker': {
             'handlers': ['console'],
             'level': 'ERROR',
+            'propagate': True,
+        },
+
+        # Логи из тасок (tracker.tasks)
+        'tracker.tasks': {
+            'handlers': ['console'],
+            'level': 'ERROR',  # чтобы видеть debug/info логи из Celery-тасок
             'propagate': False,
         },
+
+        # Логи Celery (если нужно)
         'celery': {
             'handlers': ['console'],
             'level': 'ERROR',
