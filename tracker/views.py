@@ -31,6 +31,9 @@ from .filters import (
     OnlineStatusFilter
 )
 
+# drf_spectacular
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+
 # Сервисные функции для перераспределения/удаления
 from .services.tracker_account_service import reassign_and_delete_tracker_account
 from .services.tracked_user_service import delete_tracked_user, create_tracked_user
@@ -56,6 +59,11 @@ class TrackerAccountViewSet(viewsets.ModelViewSet):
         reassign_and_delete_tracker_account(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("tg_id", type=str, description="Telegram ID трекер-аккаунта", location="path")
+        ]
+    )
     @action(detail=False, methods=['patch', 'delete'], url_path='by-telegram-id/(?P<tg_id>[^/.]+)')
     def by_telegram_id(self, request, tg_id=None):
         try:
@@ -83,6 +91,11 @@ class TrackerSettingViewSet(viewsets.ModelViewSet):
     filterset_class = TrackerSettingFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("phone", type=str, description="Phone number трекер-аккаунта", location="path")
+        ]
+    )
     @action(detail=False, methods=['patch', 'delete'], url_path='by-phone-number/(?P<phone>[^/.]+)')
     def by_phone_number(self, request, phone=None):
         try:
@@ -99,6 +112,11 @@ class TrackerSettingViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("tg_id", type=str, description="Telegram ID трекер-аккаунта", location="path")
+        ]
+    )
     @action(detail=False, methods=['patch', 'delete'], url_path='by-tracker-telegram-id/(?P<tg_id>[^/.]+)')
     def by_tracker_telegram_id(self, request, tg_id=None):
         try:
@@ -126,6 +144,11 @@ class TelegramUserViewSet(viewsets.ModelViewSet):
     filterset_class = TelegramUserFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("tg_id", type=str, description="Telegram ID телеграм-юзера", location="path")
+        ]
+    )
     @action(detail=False, methods=['patch', 'delete'], url_path='by-telegram-id/(?P<tg_id>[^/.]+)')
     def by_telegram_id(self, request, tg_id=None):
         try:
@@ -142,6 +165,11 @@ class TelegramUserViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("role", type=str, description="Роль Телеграм-юзера", location="path")
+        ]
+    )
     @action(detail=False, methods=['patch', 'delete'], url_path='by-role/(?P<role>[^/.]+)')
     def by_role(self, request, role=None):
         """
@@ -189,6 +217,11 @@ class TrackedUserViewSet(viewsets.ModelViewSet):
         delete_tracked_user(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("uname", type=str, description="Telegram Username отслеживаемого аккаунта", location="path")
+        ]
+    )
     @action(detail=False, methods=['patch', 'delete'], url_path='by-username/(?P<uname>[^/.]+)')
     def by_username(self, request, uname=None):
         try:
@@ -216,6 +249,11 @@ class OnlineStatusViewSet(viewsets.ModelViewSet):
     filterset_class = OnlineStatusFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("tuid", type=str, description="Telegram_user_id телеграм-юзера", location="path")
+        ]
+    )
     @action(detail=False, methods=['delete'], url_path='by-tracked-user-id/(?P<tuid>[^/.]+)')
     def by_tracked_user_id(self, request, tuid=None):
         statuses = OnlineStatus.objects.filter(tracked_user_id=tuid)
@@ -225,6 +263,11 @@ class OnlineStatusViewSet(viewsets.ModelViewSet):
         deleted_count = statuses.delete()
         return Response({"deleted_count": deleted_count[0]}, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("uname", type=str, description="Юзернейм отслеживаемого аккаунта", location="path")
+        ]
+    )
     @action(detail=False, methods=['delete'], url_path='by-tracked-username/(?P<uname>[^/.]+)')
     def by_tracked_username(self, request, uname=None):
         statuses = OnlineStatus.objects.filter(tracked_user__username=uname)
