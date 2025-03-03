@@ -30,10 +30,10 @@ logs:
 .PHONY: worker beat
 
 worker:
-	celery -A SeeOnline worker --loglevel=info
+	celery -A SeeOnline worker --loglevel=error
 
 beat:
-	celery -A SeeOnline beat --loglevel=info
+	celery -A SeeOnline beat --loglevel=error
 
 
 # Управление базой данных (локальная)
