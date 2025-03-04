@@ -43,6 +43,7 @@ services:
     command: gunicorn --workers=4 --bind=0.0.0.0:8000 SeeOnline.wsgi:application
     volumes:
       - .:/app
+      - ./logs:/app/logs  # Пробрасываем логи в локальную папку
     ports:
       - "8000:8000"
     networks:
@@ -50,7 +51,7 @@ services:
 
   celery:
     build: .
-    container_name: celery_worker
+    container_name: celery-worker
     restart: always
     depends_on:
       - redis
@@ -63,15 +64,16 @@ services:
       REDIS_HOST: redis
       POSTGRES_HOST: db
       DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}"
-    command: celery -A SeeOnline worker
+    command: celery -A SeeOnline worker --loglevel=error --logfile=logs/celery.log
     volumes:
       - .:/app
+      - ./logs:/app/logs  # Пробрасываем логи в локальную папку
     networks:
       - monitoring
 
-  celery_beat:
+  celery-beat:
     build: .
-    container_name: celery_beat
+    container_name: celery-beat
     restart: always
     depends_on:
       - redis
@@ -84,7 +86,7 @@ services:
       REDIS_HOST: redis
       POSTGRES_HOST: db
       DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}"
-    command: celery -A SeeOnline beat
+    command: celery -A SeeOnline beat --loglevel=error --logfile=logs/beat.log
     volumes:
       - .:/app
     networks:

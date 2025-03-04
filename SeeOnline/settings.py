@@ -95,6 +95,10 @@ DATABASES = {
 # }
 
 
+LOG_DIR = BASE_DIR / 'logs'
+
+LOG_DIR.mkdir(exist_ok=True)  # На всякий случай создадим папку, если ее нет
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -116,34 +120,32 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'json',
         },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': LOG_DIR / 'app.log',
+            'formatter': 'json',
+        },
     },
 
     'loggers': {
-        # Логи Django
         'django': {
-            'handlers': ['console'],
+            'handlers': ['file'],
             'level': 'ERROR',
             'propagate': True,
         },
-
-        # Логи вашего приложения tracker
         'tracker': {
-            'handlers': ['console'],
+            'handlers': ['file'],
             'level': 'ERROR',
             'propagate': True,
         },
-
-        # Логи из тасок (tracker.tasks)
         'tracker.tasks': {
-            'handlers': ['console'],
-            'level': 'ERROR',  # чтобы видеть debug/info логи из Celery-тасок
+            'handlers': ['file'],
+            'level': 'ERROR',
             'propagate': False,
         },
-
-        # Логи Celery
         'celery': {
-            'handlers': ['console'],
-            'level': 'INFO',
+            'handlers': ['file'],
+            'level': 'ERROR',
             'propagate': False,
         },
     }
