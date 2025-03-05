@@ -3,7 +3,5 @@
 /.idea
 **/__pycache__
 celerybeat-schedule
-celery_logs.log
-beat_logs.log
-errors.log
+/logs
 .env
