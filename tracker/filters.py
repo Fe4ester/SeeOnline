@@ -99,12 +99,11 @@ class TrackedUserFilter(filters.FilterSet):
 # Фильтры для OnlineStatus
 # -----------------------------------------------------------
 class OnlineStatusFilter(filters.FilterSet):
-    username = django_filters.CharFilter(field_name='tracked_user__username', lookup_expr='icontains')
+    tracked_user = django_filters.NumberFilter(field_name='tracked_user', lookup_expr='exact')
     is_online = django_filters.BooleanFilter()
     created_at = django_filters.DateTimeFromToRangeFilter()
 
     def __init__(self, *args, **kwargs):
-        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug("Initializing OnlineStatusFilter with args=%s, kwargs=%s", args, kwargs)
         super().__init__(*args, **kwargs)
 
@@ -113,4 +112,5 @@ class OnlineStatusFilter(filters.FilterSet):
         fields = {
             'id': ['exact'],
             'is_online': ['exact'],
+            'tracked_user': ['exact'],
         }
