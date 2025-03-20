@@ -1,6 +1,8 @@
 import logging
 from django.db import models
 
+from django.utils.timezone import get_default_timezone
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,6 +14,14 @@ class RoleChoices(models.TextChoices):
     USER = "user", "User"
     VIP = "vip", "VIP"
     ADMIN = "admin", "Administrator"
+
+
+# -----------------------------------------------------------
+# Выбор фиксированных настроек темы для TelegramUser
+# -----------------------------------------------------------
+class ThemeChoices(models.TextChoices):
+    LIGHT = "light", "Light"
+    DARK = "dark", "Dark"
 
 
 # -----------------------------------------------------------
@@ -79,6 +89,17 @@ class TelegramUser(models.Model):
     )
     current_users = models.PositiveSmallIntegerField(default=0)
     max_users = models.PositiveSmallIntegerField(default=5)
+
+    timezone = models.CharField(
+        max_length=50,
+        default=str(get_default_timezone())  # Дефолтная таймзона (можно настроить)
+    )
+    theme = models.CharField(
+        max_length=10,
+        choices=ThemeChoices.choices,
+        default=ThemeChoices.LIGHT
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -87,13 +108,11 @@ class TelegramUser(models.Model):
         verbose_name_plural = "Telegram-пользователи"
 
     def __str__(self):
-        # Debug - логи, полезны при отладки, для отслеживания всех действий
         logger.debug(
-            "Called __str__ on TelegramUser: id=%s, telegram_id=%s, role=%s",
-            self.id, self.telegram_id, self.role
+            "Called __str__ on TelegramUser: id=%s, telegram_id=%s, role=%s, timezone=%s, theme=%s",
+            self.id, self.telegram_id, self.role, self.timezone, self.theme
         )
-
-        return f"TelegramUser #{self.id} (tg_id={self.telegram_id}, role={self.role})"
+        return f"TelegramUser #{self.id} (tg_id={self.telegram_id}, role={self.role}, timezone={self.timezone}, theme={self.theme})"
 
 
 # -----------------------------------------------------------
