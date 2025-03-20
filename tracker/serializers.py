@@ -70,6 +70,8 @@ class TelegramUserSerializer(serializers.ModelSerializer):
             'role',
             'current_users',
             'max_users',
+            'timezone',
+            'theme',
             'created_at',
             'updated_at',
         ]

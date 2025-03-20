@@ -66,6 +66,8 @@ class TelegramUserFilter(filters.FilterSet):
         fields = {
             'id': ['exact'],
             'telegram_id': ['exact'],
+            'timezone': ['exact'],
+            'theme': ['exact'],
             'role': ['exact'],
         }
 
