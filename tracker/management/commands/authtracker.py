@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from tracker.models import TrackerAccount, TrackerSetting
-from tracker.services.tracker_service import default_auth
+from tracker.services.tracker_service import auth
 
 from django.db import transaction
 
@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('auth...'))
 
-            session_string = default_auth(api_id, api_hash)
+            session_string = auth(api_id, api_hash)
 
             if session_string:
 
