@@ -10,7 +10,7 @@ services:
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - /seeonline-data/pgdata:/var/lib/postgresql/data
     networks:
       - monitoring
 
@@ -108,14 +108,11 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - grafana-storage:/var/lib/grafana
+      - /seeonline-data/gfdata:/var/lib/grafana
     networks:
       - monitoring
 
-volumes:
-  postgres_data:
-  grafana-storage:
-
 networks:
   monitoring:
+    name: seeonline
     driver: bridge
